@@ -4,7 +4,9 @@ NAME		:=	cub3d
 
 CC			:=	cc
 
-CFLAGS		:=	-Wall -Wextra -Werror -Isrc
+CFLAGS		:=	-Wall -Wextra -Werror -Isrc -g3
+
+LIBFLAGS	:=	-Lmlx -lmlx -lXext -lX11 -lm
 
 SRC 		:=	src/cub3d.c
 
@@ -18,6 +20,9 @@ GCTRLDIR	:=	gctrl
 LIBFT		:=	libft/libft.a
 LIBFTDIR	:=	libft
 
+MLX			:=	mlx/libmlx.a
+MLXDIR		:=	mlx
+
 ###########################################
 
 all: $(NAME)
@@ -28,8 +33,11 @@ $(LIBFT):
 $(GCTRL):
 	make -C $(GCTRLDIR)
 
-$(NAME): $(LIBFT) $(GCTRL) $(OBJ)
-	$(CC) $(CFLAGS) -o $(NAME) $(OBJ) $(GCTRL) $(LIBFT) -lreadline 
+$(MLX):
+	make -C $(MLXDIR)
+
+$(NAME): $(LIBFT) $(GCTRL) $(MLX) $(OBJ)
+	$(CC) $(CFLAGS) $(LIBFLAGS) -o $(NAME) $(OBJ) $(GCTRL) $(LIBFT) $(MLX)
 
 clean:
 	rm -f $(OBJ)
