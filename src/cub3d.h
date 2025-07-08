@@ -9,6 +9,7 @@
 #define WINDOW_WIDTH 400
 #define WINDOW_HEIGHT 400
 #define WINDOW_NAME "CUB3D"
+#define TEST_WINDOW_NAME "REFERENCE RENDER"
 #define FOV 60
 
 typedef struct s_player

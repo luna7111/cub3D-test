@@ -33,7 +33,7 @@ t_data	*init_data(t_gctrl *gctrl)
 	data->image_address = mlx_get_data_addr(data->image, &data->img_bpp, &data->img_l_len, &data->img_endian);
 	data->input = 0;
 //////////////////////
-	data->window_test = mlx_new_window(data->mlx, WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_NAME);
+	data->window_test = mlx_new_window(data->mlx, WINDOW_WIDTH, WINDOW_HEIGHT, TEST_WINDOW_NAME);
 	data->image_test = mlx_new_image(data->mlx, WINDOW_WIDTH, WINDOW_HEIGHT);
 	data->image_address_test = mlx_get_data_addr(data->image_test, &data->img_bpp_test, &data->img_l_len_test, &data->img_endian_test);
 	return (data);
@@ -148,14 +148,12 @@ float	cast_row_ray(t_data *data, float dx, float dy)
 	else
 		dy = -1;
 
-	if (dy > 0)
+	if (dy == 1)
+		y = (int)data->player->y + 1;
+	else
 		y = (int)data->player->y;
-	else
-		y = (int)data->player->y - 1;
-	if (dx > 0)
-		x = (int)data->player->x;
-	else
-		x = (int)data->player->x - 1;
+
+	x = data->player->x + (dx * fabs(data->player->y - y));
 
 	if (dy == 1)
 	{
@@ -187,14 +185,12 @@ float	cast_column_ray(t_data *data, float dx, float dy)
 	else
 		dx = -1;
 
-	if (dx > 0)
+	if (dx == 1)
+		x = (int)data->player->x + 1;
+	else
 		x = (int)data->player->x;
-	else
-		x = (int)data->player->x - 1;
-	if (dy > 0)
-		y = (int)data->player->y;
-	else
-		y = (int)data->player->y - 1;
+
+	y = data->player->y + (dy * fabs(data->player->x - x));
 
 	if (dx == 1)
 	{
@@ -227,9 +223,19 @@ void	render_line(t_data *data, int x, float ray_angle)
 	row_distance = cast_row_ray(data, dx, dy);
 	column_distance = cast_column_ray(data, dx, dy);
 	if (row_distance < column_distance)
-		draw_wall_section(data, x, row_distance, 0xAAAAAAAA);
+	{
+		if (dy >= 0)
+			draw_wall_section(data, x, row_distance, 0xAA0AAAAA);
+		else
+			draw_wall_section(data, x, row_distance, 0xCCCC0CCC);
+	}
 	else
-		draw_wall_section(data, x, column_distance, 0xBBBBBBBB);
+	{
+		if (dx >= 0)
+			draw_wall_section(data, x, column_distance, 0xB0BB0B0B);
+		else
+			draw_wall_section(data, x, column_distance, 0xDDDDD00D);
+	}
 }
 
 void	render_frame(t_data *data)
