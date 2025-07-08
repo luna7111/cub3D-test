@@ -37,7 +37,7 @@ $(MLX):
 	make -C $(MLXDIR)
 
 $(NAME): $(LIBFT) $(GCTRL) $(MLX) $(OBJ)
-	$(CC) $(CFLAGS) $(LIBFLAGS) -o $(NAME) $(OBJ) $(GCTRL) $(LIBFT) $(MLX)
+	$(CC) $(CFLAGS) -o $(NAME) $(OBJ) $(GCTRL) $(LIBFT) $(MLX) $(LIBFLAGS)
 
 clean:
 	rm -f $(OBJ)
