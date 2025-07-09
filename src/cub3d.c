@@ -83,7 +83,7 @@ int	get_pixel_color(t_data *data, int x, int y, int facing)
 		img_adrr = data->south_addr;
 	else if (facing == EAST)
 		img_adrr = data->east_addr;
-	else if (facing == WEST)
+	if (facing == WEST)
 		img_adrr = data->west_addr;
 	color = *(unsigned int *)(img_adrr + (y * 512) + (x * (data->img_bpp / 8)));
 	return (color);
