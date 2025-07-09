@@ -6,8 +6,8 @@
 
 #define PROG_BLOCK 1
 
-#define WINDOW_WIDTH 400
-#define WINDOW_HEIGHT 400
+#define WINDOW_WIDTH 800
+#define WINDOW_HEIGHT 600
 #define WINDOW_NAME "CUB3D"
 #define TEST_WINDOW_NAME "REFERENCE RENDER"
 #define FOV 60
@@ -26,6 +26,11 @@ typedef struct s_player
 #define	I_S 0b00010000
 #define	I_D 0b00100000
 
+#define NORTH 0
+#define SOUTH 1
+#define EAST 2
+#define WEST 3
+
 typedef struct s_data
 {
 	char		**map;
@@ -41,6 +46,14 @@ typedef struct s_data
 	int			img_l_len;
 	int			img_endian;
 	int			input;
+	void		*north_texture;	
+	void		*north_addr;	
+	void		*south_texture;	
+	void		*south_addr;	
+	void		*east_texture;	
+	void		*east_addr;	
+	void		*west_texture;	
+	void		*west_addr;	
 /////////////////
 	void		*window_test;
 	void		*image_test;

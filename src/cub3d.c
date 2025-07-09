@@ -15,6 +15,23 @@ char **get_temp_map(t_gctrl *gctrl)
 	return (map);
 }
 
+void	set_test_textures(t_data *data)
+{
+	int	ignore;
+	int	bpp;
+	int	size_line;
+	int	endian;
+	data->north_texture = mlx_xpm_file_to_image(data->mlx, "textures/T01.xpm", &ignore, &ignore);
+	data->south_texture = mlx_xpm_file_to_image(data->mlx, "textures/T02.xpm", &ignore, &ignore);
+	data->east_texture = mlx_xpm_file_to_image(data->mlx, "textures/T03.xpm", &ignore, &ignore);
+	data->west_texture = mlx_xpm_file_to_image(data->mlx, "textures/T04.xpm", &ignore, &ignore);
+	data->north_addr = mlx_get_data_addr(data->north_texture, &bpp, &size_line, &endian);
+	printf("%d %d, %d %d, %d %d\n", bpp, data->img_bpp, size_line, data->img_l_len, endian, data->img_endian);
+	data->south_addr = mlx_get_data_addr(data->south_texture, &ignore, &ignore, &ignore);
+	data->east_addr = mlx_get_data_addr(data->east_texture, &ignore, &ignore, &ignore);
+	data->west_addr = mlx_get_data_addr(data->west_texture, &ignore, &ignore, &ignore);
+}
+
 t_data	*init_data(t_gctrl *gctrl)
 {
 	t_data 		*data;
@@ -36,6 +53,7 @@ t_data	*init_data(t_gctrl *gctrl)
 	data->window_test = mlx_new_window(data->mlx, WINDOW_WIDTH, WINDOW_HEIGHT, TEST_WINDOW_NAME);
 	data->image_test = mlx_new_image(data->mlx, WINDOW_WIDTH, WINDOW_HEIGHT);
 	data->image_address_test = mlx_get_data_addr(data->image_test, &data->img_bpp_test, &data->img_l_len_test, &data->img_endian_test);
+	set_test_textures(data);
 	return (data);
 }
 
@@ -54,7 +72,24 @@ void	put_pixel(t_data *data, int x, int y, int color)
 	*(unsigned int *)dst = color;
 }
 
-void	draw_wall_section(t_data *data, int x, float distance, int color)
+int	get_pixel_color(t_data *data, int x, int y, int facing)
+{
+	char	*img_adrr;
+	int		color;
+
+	if (facing == NORTH)
+		img_adrr = data->north_addr;
+	else if (facing == SOUTH)
+		img_adrr = data->south_addr;
+	else if (facing == EAST)
+		img_adrr = data->east_addr;
+	else if (facing == WEST)
+		img_adrr = data->west_addr;
+	color = *(unsigned int *)(img_adrr + (y * 512) + (x * (data->img_bpp / 8)));
+	return (color);
+}
+
+void	draw_wall_section(t_data *data, int x, float distance, int facing, float offset)
 {
 	int	size;
 	int	start_point;
@@ -66,6 +101,8 @@ void	draw_wall_section(t_data *data, int x, float distance, int color)
 		size = WINDOW_HEIGHT;
 	start_point = (WINDOW_HEIGHT - size) / 2;
 	i = 0;
+	if (facing == NORTH || facing == WEST)
+		offset = 1 - offset;
 	while (i < WINDOW_HEIGHT)
 	{
 		if (i < start_point)
@@ -73,7 +110,7 @@ void	draw_wall_section(t_data *data, int x, float distance, int color)
 		else if(i > size + start_point)
 			put_pixel(data, x, i, 0x11110011);
 		else
-			put_pixel(data, x, i, color);
+			put_pixel(data, x, i, get_pixel_color(data, (int)128 * offset, (128.0 / size) * (i - start_point), facing));
 		i++;
 	}
 }
@@ -137,7 +174,7 @@ float	sqr(float nb)
 	return (nb * nb);
 }
 
-float	cast_row_ray(t_data *data, float dx, float dy)
+float	cast_row_ray(t_data *data, float dx, float dy, float *offset)
 {
 	float	x;
 	float	y;
@@ -171,10 +208,11 @@ float	cast_row_ray(t_data *data, float dx, float dy)
 			y += dy;
 		}
 	}
+	*offset = x - (int)x; 
 	return (sqrt(sqr(x - data->player->x) + sqr(y - data->player->y)));
 }
 
-float	cast_column_ray(t_data *data, float dx, float dy)
+float	cast_column_ray(t_data *data, float dx, float dy, float *offset)
 {
 	float	x;
 	float	y;
@@ -208,6 +246,7 @@ float	cast_column_ray(t_data *data, float dx, float dy)
 			y += dy;
 		}
 	}
+	*offset = y - (int)y; 
 	return (sqrt(sqr(x - data->player->x) + sqr(y - data->player->y)));
 }
 
@@ -217,24 +256,27 @@ void	render_line(t_data *data, int x, float ray_angle)
 	float	dy;
 	float	row_distance;
 	float	column_distance;
+	float	offset[2];
 
 	dx = cos(deg_to_rad(ray_angle));
 	dy = sin(deg_to_rad(ray_angle));
-	row_distance = cast_row_ray(data, dx, dy);
-	column_distance = cast_column_ray(data, dx, dy);
+	row_distance = cast_row_ray(data, dx, dy, &offset[0]);
+	column_distance = cast_column_ray(data, dx, dy, &offset[1]);
 	if (row_distance < column_distance)
 	{
+		row_distance *= cos(deg_to_rad(ray_angle) - deg_to_rad(data->player->dir));
 		if (dy >= 0)
-			draw_wall_section(data, x, row_distance, 0xAA0AAAAA);
+			draw_wall_section(data, x, row_distance, NORTH, offset[0]);
 		else
-			draw_wall_section(data, x, row_distance, 0xCCCC0CCC);
+			draw_wall_section(data, x, row_distance, SOUTH, offset[0]);
 	}
 	else
 	{
+		column_distance *= cos(deg_to_rad(ray_angle) - deg_to_rad(data->player->dir));
 		if (dx >= 0)
-			draw_wall_section(data, x, column_distance, 0xB0BB0B0B);
+			draw_wall_section(data, x, column_distance, EAST, offset[1]);
 		else
-			draw_wall_section(data, x, column_distance, 0xDDDDD00D);
+			draw_wall_section(data, x, column_distance, WEST, offset[1]);
 	}
 }
 
