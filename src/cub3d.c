@@ -321,7 +321,7 @@ int	key_hook(int keycode, t_data *data)
 		data->input = data->input | I_A;
 	else if (keycode == K_ESC)
 		exit(0); //bad
-	render_frame(data);
+//	render_frame(data);
 	return (0);
 }
 
